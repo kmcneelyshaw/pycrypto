@@ -127,6 +127,15 @@ def GCD(x,y):
         x, y = y % x, x
     return y
 
+def LCM(x,y):
+    """LCM(x:long, y:long): long
+    Return the LCM of x and y.
+    """
+    x = abs(x) ; y = abs(y)
+    if y > x:
+        x, y = y, x
+    return (x / GCD(x, y)) * y
+
 def inverse(u, v):
     """inverse(u:long, v:long):long
     Return the inverse of u mod v.
