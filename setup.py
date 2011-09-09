@@ -157,7 +157,7 @@ class PCTBuildExt (build_ext):
             self.compiler.include_dirs.insert(0, "src/inc-msvc/")
 
         # Detect libgmp and don't build _fastmath if it is missing.
-        lib_dirs = self.compiler.library_dirs + ['/lib', '/usr/lib']
+        lib_dirs = self.compiler.library_dirs + ['/lib', '/usr/lib', '/usr/local/lib']
         if not (self.compiler.find_library_file(lib_dirs, 'gmp')):
             print >>sys.stderr, "warning: GMP library not found; Not building Crypto.PublicKey._fastmath."
             self.__remove_extensions(["Crypto.PublicKey._fastmath"])
