@@ -1,3 +1,48 @@
+2.4.1
+=====
+	* Fix "error: Setup script exited with error: src/config.h: No such file or
+	  directory" when installing via easy_install.  (Sebastian Ramacher)
+
+2.4
+===
+	* Python 3 support!  (Thorsten E. Behrens, Anders Sundman)
+	  PyCrypto now supports every version of Python from 2.1 through 3.2.
+
+	* Timing-attack countermeasures in _fastmath: When built against
+	  libgmp version 5 or later, we use mpz_powm_sec instead of mpz_powm.
+	  This should prevent the timing attack described by Geremy Condra at
+	  PyCon 2011:
+	  http://blip.tv/pycon-us-videos-2009-2010-2011/pycon-2011-through-the-side-channel-timing-and-implementation-attacks-in-python-4897955
+
+	* New hash modules (for Python >= 2.5 only): SHA224, SHA384, and
+	  SHA512 (Frédéric Bertolus)
+
+	* Configuration using GNU autoconf.  This should help fix a bunch of
+	  build issues.
+
+	* Support using MPIR as an alternative to GMP.
+
+	* Improve the test command in setup.py, by allowing tests to be
+	  performed on a single sub-package or module only. (Legrandin)
+
+	  You can now do something like this:
+
+	    python setup.py test -m Hash.SHA256 --skip-slow-tests
+
+	* Fix double-decref of "counter" when Cipher object initialisation
+	  fails (Ryan Kelly)
+
+	* Apply patches from Debian's python-crypto 2.3-3 package (Jan
+	  Dittberner, Sebastian Ramacher):
+	 - fix-RSA-generate-exception.patch
+	 - epydoc-exclude-introspect.patch
+	 - no-usr-local.patch
+
+	* Fix launchpad bug #702835: "Import key code is not compatible with
+	  GMP library" (Legrandin)
+
+	* More tests, better documentation, various bugfixes.
+
 2.3
 ===
 	* Fix NameError when attempting to use deprecated getRandomNumber()

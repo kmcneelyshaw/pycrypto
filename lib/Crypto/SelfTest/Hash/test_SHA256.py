@@ -27,6 +27,7 @@
 __revision__ = "$Id$"
 
 import unittest
+from Crypto.Util.py3compat import *
 
 class LargeSHA256Test(unittest.TestCase):
     def runTest(self):

@@ -28,8 +28,10 @@ __revision__ = "$Id$"
 
 __all__ = ['rsa_construct']
 
-from Crypto.Util.python_compat import *
+import sys
 
+if sys.version_info[0] == 2 and sys.version_info[1] == 1:
+    from Crypto.Util.py21compat import *
 from Crypto.Util.number import size, inverse
 
 class error(Exception):
@@ -48,7 +50,15 @@ class _RSAKey(object):
         # compute c**d (mod n)
         if not self.has_private():
             raise TypeError("No private key")
-        return pow(c, self.d, self.n) # TODO: CRT exponentiation
+        if (hasattr(self,'p') and hasattr(self,'q') and hasattr(self,'u')):
+            m1 = pow(c, self.d % (self.p-1), self.p) 
+            m2 = pow(c, self.d % (self.q-1), self.q)
+            h = m2 - m1
+            if (h<0):
+                h = h + self.q
+            h = h*self.u % self.q
+            return h*self.p+m1
+        return pow(c, self.d, self.n)
 
     def _encrypt(self, m):
         # compute m**d (mod n)

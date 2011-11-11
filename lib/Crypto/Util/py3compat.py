@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 #
+#  Util/py3compat.py : Compatibility code for handling Py3k / Python 2.x
+#
+# Written in 2010 by Thorsten Behrens
+#
 # ===================================================================
 # The contents of this file are dedicated to the public domain.  To
 # the extent that dedication to the public domain is not available,
@@ -18,26 +22,33 @@
 # SOFTWARE.
 # ===================================================================
 
-# Just use the SHA module from the Python standard library
+"""Compatibility code for handling string/bytes changes from Python 2.x to Py3k
+"""
 
 __revision__ = "$Id$"
 
-__all__ = ['new', 'digest_size']
+import sys
 
-from Crypto.Util.py3compat import *
+if sys.version_info[0] == 2:
+    def b(s):
+        return s
+    def bchr(s):
+        return chr(s)
+    def bstr(s):
+        return str(s)
+    def bord(s):
+        return ord(s)
+else:
+    def b(s):
+       return s.encode("latin-1") # utf-8 would cause some side-effects we don't want
+    def bchr(s):
+        return bytes([s])
+    def bstr(s):
+        if isinstance(s,str):
+            return bytes(s,"latin-1")
+        else:
+            return bytes(s)
+    def bord(s):
+        return s
 
-try:
-    # The md5 module is deprecated in Python 2.6, so use hashlib when possible.
-    import hashlib
-    def new(data=b("")):
-        return hashlib.sha1(data)
-    digest_size = new().digest_size
-
-except ImportError:
-    from sha import *
-    import sha
-    if hasattr(sha, 'digestsize'):
-        digest_size = digestsize
-        del digestsize
-    del sha
-block_size = 64
+# vim:set ts=4 sw=4 sts=4 expandtab:
