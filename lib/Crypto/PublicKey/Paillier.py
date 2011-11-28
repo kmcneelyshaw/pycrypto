@@ -36,18 +36,28 @@ if sys.version_info[0] == 2 and sys.version_info[1] == 1:
 from Crypto.Util.py3compat import *
 
 from Crypto.Util import number
+from Crypto import Random
+from Crypto.PublicKey import pubkey
 
-class _Paillierobj(pubkey.pubkey):
+class Paillierobj(pubkey.pubkey):
     keydata = ['n', 'g', 'l', 'm', 'p', 'q', 'n_sq']
 
-    def _encrypt(self, m):
+    def __init__(self, randfunc=None):
+        if randfunc is None:
+            randfunc = Random.new().read
+        self._randfunc = randfunc
+
+    def _encrypt(self, m, K):
         if not self.has_private():
             raise TypeError("No private key")
-        r = _getRandomMult(self)
-        return (pow(self.g, m, self.n_sq)*pow(r, self.n, self.n_sq)) % self.n_sq
+        r = self._getRandomMult()
+        return (
+            pow(self.g, m, self.n_sq)*
+            pow(r, self.n, self.n_sq) % self.n_sq,)
     
     def _decrypt(self, c):
-        return L(pow(c, self.l, self.n_sq), self.n)*self.m % self.n
+        return L(
+            pow(c[0], self.l, self.n_sq), self.n)*self.m % self.n
 
     def _getRandomMult(self):
         r = self.p # start while loop
@@ -64,13 +74,12 @@ class _Paillierobj(pubkey.pubkey):
         else:
             return 0
 
-    def publickey():
-        return construct((self.n, self.g, self.n_sq))
+    def publickey(self):
+        return construct(self.n, self.g, self.n_sq)
     
-
+object=Paillierobj
 
 def generate(bits, randfunc=None, progress_func=None):
-    # TODO: keydata = ['n', 'g', 'l', 'm', 'p', 'q', 'n_sq']
     obj=Paillierobj()
     # Generate the prime factors of n
     if progress_func:
@@ -84,7 +93,7 @@ def generate(bits, randfunc=None, progress_func=None):
     obj.p = p
     obj.q = q
     obj.n = p*q
-    obj.n_sq = n*n
+    obj.n_sq = obj.n*obj.n
 
     if progress_func:
         progress_func('l\n')
@@ -95,7 +104,7 @@ def generate(bits, randfunc=None, progress_func=None):
 
     obj.g = obj._getRandomMult()*obj.n+1 # TODO: check
     gExp = L(pow(obj.g, obj.l, obj.n_sq), obj.n)
-    while not num.GCD(gExp, obj.n) == 1:
+    while not number.GCD(gExp, obj.n) == 1:
         obj.g = obj._getRandomMult()*obj.n+1 # TODO: check
         gExp = L(pow(obj.g, obj.l, obj.n_sq), obj.n)
     obj.m = number.inverse(gExp, obj.n)
@@ -105,10 +114,31 @@ def generate(bits, randfunc=None, progress_func=None):
     return obj
 
 def L(u, n):
-    return (u - 1) // n
+    return divmod((u - 1), n)[0]
     
+# TODO: keydata = ['n', 'g', 'l', 'm', 'p', 'q', 'n_sq']
+def construct(n, g, l=None, m=None, p=None, q=None, n_sq=None):
+    assert isinstance(n,    long)
+    assert isinstance(g,    long)
+    assert isinstance(l,    (long, type(None)))
+    assert isinstance(m,    (long, type(None)))
+    assert isinstance(p,    (long, type(None)))
+    assert isinstance(q,    (long, type(None)))
+    assert isinstance(n_sq, (long, type(None)))
 
-# # __revision__ = "$Id$"
+    obj = Paillierobj
+    obj.n = n
+    obj.g = g
+    if l is not None: obj.l = l
+    if m is not None: obj.m = m
+    if p is not None: obj.p = p
+    if q is not None: obj.q = q
+    if n_sq is not None:
+        obj.n_sq = n_sq
+    elif n is not None:
+        obj.n_sq = n*n
+    return obj
+
 
 # # # Paillier key generation yields PrivateKey(p,q,n) and PublicKey(n)
 # # #    where PrivateKey has 
@@ -119,41 +149,6 @@ def L(u, n):
 # # # get g by picking random 0 <= k < n and taking k*n+1
 # # # where "of length bits" is p of length bits/2 and q of same?
 # # # so in other words I have ((l, m),(n, n^2, g))
-
-
-
-
-# # #     # Generate random number g
-# # #     if progress_func:
-# # #         progress_func('g\n')
-# # #     size=bits-1-(ord(randfunc(1)) & 63) # g will be from 1--64 bits smaller than p
-# # #     if size<1:
-# # #         size=bits-1
-# # #     while (1):
-# # #         obj.g=bignum(getPrime(size, randfunc))
-# # #         if obj.g < obj.p:
-# # #             break
-# # #         size=(size+1) % bits
-# # #         if size==0:
-# # #             size=4
-# # #     # Generate random number x
-# # #     if progress_func:
-# # #         progress_func('x\n')
-# # #     while (1):
-# # #         size=bits-1-ord(randfunc(1)) # x will be from 1 to 256 bits smaller than p
-# # #         if size>2:
-# # #             break
-# # #     while (1):
-# # #         obj.x=bignum(getPrime(size, randfunc))
-# # #         if obj.x < obj.p:
-# # #             break
-# # #         size = (size+1) % bits
-# # #         if size==0:
-# # #             size=4
-# # #     if progress_func:
-# # #         progress_func('y\n')
-# # #     obj.y = pow(obj.g, obj.x, obj.p)
-# # #     return obj
 
 
 # # def construct(tuple):
